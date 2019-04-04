@@ -1,0 +1,40 @@
+- name: add nginx repo 
+  copy: 
+      src: nginx.repo
+      dest: /etc/yum.repos.d/nginx.repo
+
+- name: install nginx 
+  yum: name=nginx state=present 
+
+- name: check if default.conf exist
+  stat: path=/etc/nginx/conf.d/default.conf
+  register: result
+
+- name: disable default config
+  command: mv /etc/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf.disabled
+  when: result.stat.exists
+
+- name: install selinux-related python binaries for Ansible to work
+  yum: name={{ item }} state=present
+  with_items:
+    - libselinux-python
+    - libsemanage-python
+
+- name: set "httpd_can_network_connect" flag on
+  seboolean: name=httpd_can_network_connect state=yes persistent=yes
+
+- name: start nginx 
+  service: 
+         name: nginx
+         state: started
+
+- name: copy config files
+  copy:
+      src: nginx.conf
+      dest: /etc/nginx/conf.d/nodeapp.conf
+  notify: restart nginx
+- name: copy angular files
+  copy:
+      src: goodReads
+      dest: /var/www  
+

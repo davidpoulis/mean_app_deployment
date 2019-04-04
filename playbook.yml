@@ -1,0 +1,14 @@
+---
+- import_playbook: pre.yml
+- name: deploy mongo
+  hosts: mongo
+  roles: 
+    - mongo
+- name: deploy node
+  hosts: node
+  roles:
+    - node
+- name: nginx
+  hosts: nginx
+  roles:
+    - nginx

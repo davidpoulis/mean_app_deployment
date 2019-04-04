@@ -1,0 +1,31 @@
+- name: check if mongo installed
+  command: which mongod
+  register: mongo_result
+  ignore_errors: yes
+
+- name: add mongo repo
+  yum_repository:
+     name: mongodb-org-3.4
+     description: "Mongo Repo"
+     baseurl: https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/3.4/x86_64/
+     gpgkey: yes
+     enabled: yes
+     gpgkey: https://www.mongodb.org/static/pgp/server-3.4.asc
+     file: mongodb-org-3.4
+  when: mongo_result != '/usr/bin/mongod'
+ 
+- name: install mongo 
+  package:
+         name: mongodb-org
+         state: latest
+  when: mongo_result != '/usr/bin/mongod'
+
+- name: start mongo 
+  service: name=mongod state=started
+
+- name: mongo configuration
+  copy:
+      src: mongod.conf
+      dest: /etc/mongod.conf
+  notify: restart mongo
+  when: mongo_result != '/usr/bin/mongod'

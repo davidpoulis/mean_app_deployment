@@ -1,0 +1,39 @@
+- name: install node v8
+  shell: "curl --silent --location https://rpm.nodesource.com/setup_8.x | sudo bash -
+"
+
+- name: install node and npm 
+  yum: 
+     name: "{{ item }}"
+     state: installed
+  with_items:
+            - nodejs
+- name: install forever package
+  npm: name=forever state=present global=yes
+
+- name: create nodejs path
+  file:
+      path: /var/nodejs/
+      state: directory
+
+- name: copy nodejs project
+  copy:
+      src: goodReads
+      dest: /var/nodejs/good_reads
+
+- name: install required packages
+  command: npm install /var/nodejs/good_reads/good_reads/
+  changed_when: false
+
+- name: install required packages
+  shell: "cd /var/nodejs/good_reads/good_reads/ | npm install express | npm install mongoose"
+  changed_when: false
+
+- name: check if nodejs is running
+  command: forever list
+  register: forever_list
+  changed_when: false
+
+- name: start nodejs app
+  command: forever start /var/nodejs/good_reads/good_reads/index.js
+  when: " forever_list.stdout.find('/var/nodejs/good_reads/good_reads/index.js') == -1"
